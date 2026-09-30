@@ -26,7 +26,7 @@
       logo: '',
       lastOrderNumber: 0,
       supplierOrderCounters: {},
-      recoveryCode: ''
+      recoveryCode: '0000'
     },
     manufacturers: [],
     products: [],
@@ -37,7 +37,24 @@
   };
 
   const SECURITY_DEFAULT = {
-    users: [],
+    users: [
+      {
+        id: 'director',
+        username: 'directeur',
+        password: '2468',
+        role: 'director',
+        name: 'Directeur',
+        active: true
+      },
+      {
+        id: 'responsable',
+        username: 'responsable',
+        password: '1357',
+        role: 'responsable',
+        name: 'Responsable',
+        active: true
+      }
+    ],
     current: null,
     audit: []
   };
@@ -132,7 +149,22 @@
   }
 
   function loadSecurity() {
-    return { users: [], current: window.__kotharIdentity || null, audit: [] };
+    try {
+      const raw = localStorage.getItem(SECURITY_KEY);
+      if (!raw) return clone(SECURITY_DEFAULT);
+
+      const x = JSON.parse(raw);
+
+      return {
+        users: Array.isArray(x.users) && x.users.length
+          ? x.users
+          : clone(SECURITY_DEFAULT.users),
+        current: null,
+        audit: Array.isArray(x.audit) ? x.audit : []
+      };
+    } catch (e) {
+      return clone(SECURITY_DEFAULT);
+    }
   }
 
   function save() {
@@ -144,7 +176,16 @@
   }
 
   function saveSecurity() {
-    // Les identités et mots de passe sont gérés par Firebase Authentication.
+    try {
+      localStorage.setItem(
+        SECURITY_KEY,
+        JSON.stringify({
+          users: security.users,
+          current: null,
+          audit: security.audit.slice(-500)
+        })
+      );
+    } catch (e) {}
   }
 
   /* =========================================================
@@ -194,7 +235,7 @@
       details
     });
 
-    window.__kotharAudit?.(security.audit[security.audit.length - 1]);
+    saveSecurity();
   }
 
   function requireLogin() {
@@ -222,10 +263,6 @@
      ========================================================= */
 
   function ensureSecurityUI() {
-    if (window.__kotharFirebaseAuth) {
-      window.__kotharSignOut?.();
-      return;
-    }
     if ($('kotharSecurityOverlay')) {
       showLoginUsers();
       return;
@@ -763,10 +800,6 @@
 
   function logout() {
     audit('Déconnexion');
-    if (window.__kotharFirebaseAuth) {
-      window.__kotharSignOut?.();
-      return;
-    }
     security.current = null;
 
     const el = $('kotharConnectedUserTop');
@@ -4035,19 +4068,6 @@
      ========================================================= */
 
   function ensureUserManagementUI() {
-    if (window.__kotharRenderUsers) return window.__kotharRenderUsers();
-    if (window.__kotharFirebaseAuth) {
-      if (!isDirector()) return;
-      const page = $('page-settings');
-      if (!page || $('kotharUserManagement')) return;
-      const panel = document.createElement('div');
-      panel.id = 'kotharUserManagement';
-      panel.className = 'panel';
-      panel.style.marginTop = '20px';
-      panel.innerHTML = '<h3>Comptes des responsables</h3><p>Créez un compte dans Firebase Authentication → Utilisateurs, puis autorisez son UID dans la collection kothar_users de Firestore. Les mots de passe sont gérés par Firebase.</p>';
-      page.appendChild(panel);
-      return;
-    }
     if (!isDirector()) {
       $('kotharUserManagement')?.remove();
       return;
@@ -4506,7 +4526,11 @@
       DEFAULT.settings.color
     );
 
-    db.settings.recoveryCode = '';
+    if ($('settingRecoveryCode')) {
+      db.settings.recoveryCode =
+        $('settingRecoveryCode').value.trim() ||
+        DEFAULT.settings.recoveryCode;
+    }
 
     save();
     apply();
@@ -4562,10 +4586,6 @@
   }
 
   function ensureRecoveryCodeUI() {
-    if (window.__kotharFirebaseAuth) {
-      $('kotharRecoveryPanel')?.remove();
-      return;
-    }
     if (!isDirector()) {
       $('kotharRecoveryPanel')?.remove();
       return;
@@ -4978,10 +4998,16 @@
      INITIALISATION
      ========================================================= */
   window.__kotharReload = function () {
+    const cur = security.current;   // إبقاء المستخدم الحالي متصلًا
     db = load();
     security = loadSecurity();
+    security.current = security.users.find(u =>
+      u.username === cur?.username &&
+      u.role === cur?.role &&
+      u.active !== false
+    ) ? cur : null;
     render();
-    if (!security.current) window.__kotharSignOut?.();
+    if (!security.current) ensureSecurityUI();
   };
   
   function init() {
