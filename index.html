@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#7B3452">
+<title>Kothar Médical — Gestion de stock</title>
+<link rel="stylesheet" href="style.css">
+
+<style id="organized-tables">
+.table-wrap { width:100%; max-width:100%; min-width:0; overflow-x:auto; border:1px solid #e5e7eb; border-radius:12px; background:#fff; }
+.table-wrap table { width:100%; border-collapse:collapse; table-layout:auto; }
+.table-wrap th, .table-wrap td { padding:13px 16px !important; font-size:14px !important; line-height:1.5; text-align:left !important; vertical-align:middle !important; border-bottom:1px solid #e5e7eb !important; white-space:normal; word-break:normal !important; overflow-wrap:break-word !important; }
+.table-wrap th { background:var(--primary, #7B3452) !important; color:#fff; font-weight:600; white-space:nowrap !important; }
+.table-wrap tbody tr:nth-child(even) { background:#faf8f9; }
+.table-wrap tbody tr:hover { background:#f3edf0; }
+.table-wrap tbody tr:last-child td { border-bottom:0 !important; }
+.table-wrap td:first-child:not([colspan]) { min-width:120px; font-variant-numeric:tabular-nums; }
+.table-wrap td:last-child:not([colspan]), .table-wrap th:last-child { text-align:center !important; white-space:nowrap !important; }
+.table-wrap .action { display:inline-flex; align-items:center; justify-content:center; margin:3px; min-height:34px; padding:6px 10px; }
+.table-wrap td.empty { text-align:center !important; padding:24px !important; }
+.table-wrap small { color:#6b7280; font-size:12px; }
+#productsTable td:nth-child(2), #manufacturerProductsTable td:nth-child(2), #entriesTable td:nth-child(3), #exitsTable td:nth-child(5) { min-width:210px; max-width:340px; }
+#productsTable td:nth-child(6), #manufacturerProductsTable td:nth-child(5), #entriesTable td:nth-child(5), #exitsTable td:nth-child(7) { text-align:right !important; font-variant-numeric:tabular-nums; }
+#productsTable td:nth-child(7), #entriesTable td:nth-child(2), #entriesTable td:nth-child(6), #exitsTable td:nth-child(2) { white-space:nowrap !important; font-variant-numeric:tabular-nums; }
+#exitsTable td:nth-child(3), #exitsTable td:nth-child(4) { min-width:170px; max-width:280px; }
+#clientsCards { display:block; width:100%; min-width:0; }
+#clientsCards table { min-width:540px; }
+#clientsCards td:first-child { width:55%; min-width:220px; }
+#clientsCards td:nth-child(2) { white-space:nowrap !important; font-variant-numeric:tabular-nums; text-align:left !important; }
+#clientsCards td:last-child { width:180px; }
+@media (max-width:700px) { .table-wrap th, .table-wrap td { padding:10px 12px !important; font-size:13px !important; } }
+</style>
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+
+    <div class="brand">
+
+      <div class="logo-wrap">
+        <img id="brandLogo" alt="Logo Kothar Médical">
+      </div>
+
+      <div class="brand-text">
+        <strong>Kothar Médical</strong>
+        <span>Gestion de stock</span>
+      </div>
+
+    </div>
+
+    <div class="nav-title">MENU PRINCIPAL</div>
+
+    <nav class="nav">
+
+      <button class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">⌂</span>
+        <span>Tableau de bord</span>
+      </button>
+
+      <button class="nav-item" data-page="products">
+        <span class="nav-icon">▦</span>
+        <span>Produits</span>
+      </button>
+
+      <button class="nav-item" data-page="manufacturers">
+        <span class="nav-icon">▣</span>
+        <span>Fabricants</span>
+      </button>
+
+      <button class="nav-item" data-page="entries">
+        <span class="nav-icon">↓</span>
+        <span>Entrées</span>
+      </button>
+
+      <button class="nav-item" data-page="exits">
+        <span class="nav-icon">↑</span>
+        <span>Sorties</span>
+      </button>
+
+      <button class="nav-item" data-page="clients">
+        <span class="nav-icon">♙</span>
+        <span>Clients / Hôpitaux</span>
+      </button>
+
+      <button class="nav-item" data-page="orders">
+        <span class="nav-icon">☷</span>
+        <span>Commandes</span>
+      </button>
+
+      <div class="nav-title second">ANALYSE</div>
+
+      <button class="nav-item" data-page="reports">
+        <span class="nav-icon">▤</span>
+        <span>Rapports</span>
+      </button>
+
+      <button class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙</span>
+        <span>Paramètres</span>
+      </button>
+
+    </nav>
+
+    <div class="sidebar-profile">
+
+      <div class="profile-dot">KM</div>
+
+      <div>
+        <small>Directeur</small>
+        <strong id="sidebarDirector">—</strong>
+      </div>
+
+      <div class="engineer-label">
+        Ingénieur :
+        <b id="sidebarEngineer">—</b>
+      </div>
+
+    </div>
+
+  </aside>
+
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div class="topbar-title">
+
+        <div class="eyebrow">
+          KOTHAR MÉDICAL
+        </div>
+
+        <h1 id="pageTitle">
+          Tableau de bord
+        </h1>
+
+        <p id="pageSubtitle">
+          Vue générale du stock
+        </p>
+
+      </div>
+
+      <div class="topbar-actions">
+
+        <div class="responsible-chip">
+
+          <span class="status-dot"></span>
+
+          Responsable :
+          <b id="headerResponsible">—</b>
+
+        </div>
+
+        <button
+          id="headerSettingsBtn"
+          class="icon-btn"
+          title="Paramètres">
+          ⚙
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- TABLEAU DE BORD -->
+
+    <section
+      id="page-dashboard"
+      class="page active">
+
+      <div class="welcome">
+
+        <div>
+
+          <span class="eyebrow">
+            CENTRE DE CONTRÔLE
+          </span>
+
+          <h2>
+            Vue d'ensemble du stock
+          </h2>
+
+          <p>
+            Suivez les produits, mouvements,
+            expirations et demandes en un seul endroit.
+          </p>
+
+        </div>
+
+        <div class="welcome-mark">
+          KM
+        </div>
+
+      </div>
+
+
+      <div class="stats">
+
+        <div class="stat-card">
+          <div class="stat-icon">▦</div>
+          <div>
+            <span>Produits</span>
+            <strong id="statProducts">0</strong>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">▣</div>
+          <div>
+            <span>Fabricants</span>
+            <strong id="statManufacturers">0</strong>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">♙</div>
+          <div>
+            <span>Clients</span>
+            <strong id="statClients">0</strong>
+          </div>
+        </div>
+
+        <div class="stat-card warning-card">
+          <div class="stat-icon">!</div>
+          <div>
+            <span>Stock faible</span>
+            <strong id="statLowStock">0</strong>
+          </div>
+        </div>
+
+        <div class="stat-card danger-card">
+          <div class="stat-icon">×</div>
+          <div>
+            <span>Stock terminé</span>
+            <strong id="statFinished">0</strong>
+          </div>
+        </div>
+
+        <div class="stat-card info-card">
+          <div class="stat-icon">◷</div>
+          <div>
+            <span>Expiration proche</span>
+            <strong id="statExpiring">0</strong>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-grid">
+
+        <div class="panel">
+
+          <div class="panel-head">
+
+            <div>
+              <h3>Alertes de stock</h3>
+
+              <p>
+                Produits nécessitant votre attention
+              </p>
+            </div>
+
+            <span class="panel-badge">
+              Surveillance
+            </span>
+
+          </div>
+
+          <div id="dashboardAlerts"></div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-head">
+
+            <div>
+              <h3>Dernières commandes</h3>
+              <p>Demandes récentes</p>
+            </div>
+
+          </div>
+
+          <div id="dashboardOrder"></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PRODUITS -->
+
+    <section
+      id="page-products"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            INVENTAIRE
+          </div>
+
+          <h2>Produits</h2>
+
+          <p>
+            Produits, lots et emplacement de stockage.
+          </p>
+
+        </div>
+
+        <div class="page-actions">
+
+          <button
+            id="productsPdfBtn"
+            class="btn secondary">
+            PDF
+          </button>
+
+          <button
+            id="addProductBtn"
+            class="btn primary">
+            ＋ Nouveau produit
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="toolbar">
+
+        <input
+          id="productSearch"
+          class="search"
+          placeholder="Rechercher un produit, une référence ou un lot…">
+
+        <select id="productCategoryFilter">
+
+          <option value="">
+            Toutes les catégories
+          </option>
+
+          <option>
+            Machines médicales
+          </option>
+
+          <option>
+            Dispositifs médicaux
+          </option>
+
+          <option>
+            Laboratoire
+          </option>
+
+          <option>
+            Consommables
+          </option>
+
+          <option>
+            Réactifs
+          </option>
+
+          <option>
+            Équipements
+          </option>
+
+        </select>
+
+        <select id="productManufacturerFilter">
+
+          <option value="">
+            Tous les fabricants
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="table-card">
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+<tr><th>Référence</th><th>Nom du produit</th><th>Catégorie</th><th>Lot</th><th>Fabricant</th><th>Stock</th><th>Date exp.</th><th>État</th><th>Actions</th></tr>
+</thead>
+
+            <tbody id="productsTable"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- FABRICANTS -->
+
+    <section
+      id="page-manufacturers"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            RÉFÉRENTIEL
+          </div>
+
+          <h2>Fabricants</h2>
+
+          <p>
+            Consultez rapidement tous les produits
+            d'un fabricant.
+          </p>
+
+        </div>
+
+        <button
+          id="addManufacturerBtn"
+          class="btn primary">
+          ＋ Nouveau fabricant
+        </button>
+
+      </div>
+
+
+      <div
+        id="manufacturerCards"
+        class="cards">
+      </div>
+
+
+      <div
+        id="manufacturerProductsPanel"
+        class="panel hidden">
+
+        <div class="panel-head">
+
+          <div>
+
+            <h3 id="selectedManufacturerTitle">
+            </h3>
+
+            <p>
+              Produits associés
+            </p>
+
+          </div>
+
+          <button
+            id="closeManufacturerProducts"
+            class="btn secondary">
+            Fermer
+          </button>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+<tr><th>Référence</th><th>Nom du produit</th><th>Catégorie</th><th>Lots</th><th>Stock</th><th>Actions</th></tr>
+</thead>
+
+            <tbody
+              id="manufacturerProductsTable">
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ENTREES -->
+
+    <section
+      id="page-entries"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            MOUVEMENTS
+          </div>
+
+          <h2>Entrées</h2>
+
+          <p>
+            Réceptions, quantités, lots et
+            dates d'expiration.
+          </p>
+
+        </div>
+
+        <div class="page-actions">
+
+          <button
+            id="entriesPdfBtn"
+            class="btn secondary">
+            PDF
+          </button>
+
+          <button
+            id="addEntryBtn"
+            class="btn primary">
+            ＋ Nouvelle entrée
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <input
+        id="entrySearch"
+        class="search full-search"
+        placeholder="Rechercher produit, référence ou lot…">
+
+
+      <div class="table-card">
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Date</th>
+                <th>Produit</th>
+                <th>Lot</th>
+                <th>Quantité</th>
+                <th>Expiration</th>
+                <th>Responsable</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="entriesTable"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- SORTIES -->
+
+    <section
+      id="page-exits"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            MOUVEMENTS
+          </div>
+
+          <h2>Sorties</h2>
+
+          <p>
+            Livraisons clients.
+            Les produits à stock 0 sont
+            automatiquement exclus.
+          </p>
+
+        </div>
+
+        <div class="page-actions">
+
+          <button
+            id="exitsPdfBtn"
+            class="btn secondary">
+            PDF
+          </button>
+
+          <button
+            id="addExitBtn"
+            class="btn primary">
+            ＋ Nouvelle sortie
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <input
+        id="exitSearch"
+        class="search full-search"
+        placeholder="Rechercher client, commande, produit ou lot…">
+
+
+      <div class="table-card">
+
+        <div class="table-wrap">
+
+          <table>
+
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Commande</th>
+                <th>Produit</th>
+                <th>Lot</th>
+                <th>Quantité</th>
+                <th>Responsable</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody id="exitsTable"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CLIENTS -->
+
+    <section
+      id="page-clients"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            CLIENTS
+          </div>
+
+          <h2>
+            Clients / Hôpitaux
+          </h2>
+
+          <p>
+            Répertoire des établissements et clients.
+          </p>
+
+        </div>
+
+        <button
+          id="addClientBtn"
+          class="btn primary">
+          ＋ Nouveau client
+        </button>
+
+      </div>
+
+
+      <div
+        id="clientsCards"
+        class="cards">
+      </div>
+
+    </section>
+
+
+    <!-- COMMANDES -->
+
+    <section
+      id="page-orders"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            APPROVISIONNEMENT
+          </div>
+
+          <h2>Commandes</h2>
+
+          <p>
+            Demandes de réapprovisionnement
+            basées sur le niveau de stock.
+          </p>
+
+        </div>
+
+        <button
+          id="makeOrderBtn"
+          class="btn primary">
+          ＋ Nouvelle demande
+        </button>
+
+      </div>
+
+
+      <div
+        id="currentOrderList"
+        class="order-list">
+      </div>
+
+    </section>
+
+
+    <!-- RAPPORTS -->
+
+    <section
+      id="page-reports"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            DOCUMENTS
+          </div>
+
+          <h2>Rapports</h2>
+
+          <p>
+            Générez vos documents PDF au format
+            A4 vertical.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="report-grid">
+
+
+        <!-- RAPPORT PRODUITS -->
+
+        <button
+          id="reportProductsBtn"
+          class="report-card">
+
+          <span class="report-icon">
+            ▦
+          </span>
+
+          <span>
+
+            <b>
+              État des produits
+            </b>
+
+            <small>
+              Stock actuel, lots et expirations
+            </small>
+
+          </span>
+
+          <i>→</i>
+
+        </button>
+
+
+        <!-- RAPPORT ENTREES -->
+
+        <button
+          id="reportEntriesBtn"
+          class="report-card">
+
+          <span class="report-icon">
+            ↓
+          </span>
+
+          <span>
+
+            <b>
+              Historique des entrées
+            </b>
+
+            <small>
+              Réceptions et mouvements entrants
+              classés par date
+            </small>
+
+          </span>
+
+          <i>→</i>
+
+        </button>
+
+
+        <!-- RAPPORT SORTIES -->
+
+        <button
+          id="reportExitsBtn"
+          class="report-card">
+
+          <span class="report-icon">
+            ↑
+          </span>
+
+          <span>
+
+            <b>
+              Historique des sorties
+            </b>
+
+            <small>
+              Livraisons et clients classées par date
+            </small>
+
+          </span>
+
+          <i>→</i>
+
+        </button>
+
+
+      </div>
+
+    </section>
+
+
+    <!-- PARAMETRES -->
+
+    <section
+      id="page-settings"
+      class="page">
+
+      <div class="page-head">
+
+        <div>
+
+          <div class="eyebrow">
+            CONFIGURATION
+          </div>
+
+          <h2>Paramètres</h2>
+
+          <p>
+            Les paramètres sont sauvegardés
+            localement dans votre navigateur.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="settings-layout">
+
+
+        <div class="panel">
+
+          <div class="panel-head">
+
+            <div>
+
+              <h3>
+                Informations de la société
+              </h3>
+
+              <p>
+                Ces informations sont utilisées
+                dans l'interface et les documents.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="settings-grid">
+
+            <div class="form-group">
+
+              <label>Directeur</label>
+
+              <input id="settingDirector">
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>Ingénieur</label>
+
+              <input id="settingEngineer">
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Responsable du stock
+              </label>
+
+              <input id="settingResponsible">
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label>
+                Seuil de stock faible
+              </label>
+
+              <input
+                id="settingThreshold"
+                type="number"
+                min="0">
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-head">
+
+            <div>
+
+              <h3>
+                Identité visuelle
+              </h3>
+
+              <p>
+                Couleur principale et logo
+                de Kothar Médical.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>
+              Couleur de la société
+            </label>
+
+            <div class="color-row">
+
+              <input
+                id="settingColor"
+                type="color">
+
+              <input
+                id="settingColorText"
+                placeholder="#7B3452">
+
+            </div>
+
+          </div>
+
+
+          <div class="form-group logo-setting">
+
+            <label>Logo</label>
+
+            <input
+              id="logoInput"
+              type="file"
+              accept="image/*">
+
+            <img
+              id="logoPreview"
+              class="logo-preview"
+              alt="Aperçu du logo">
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+</div>
+
+
+<!-- MODALE -->
+
+<div
+  id="modalOverlay"
+  class="modal-overlay">
+
+  <div class="modal">
+
+    <div class="modal-head">
+
+      <h3 id="modalTitle"></h3>
+
+      <button
+        id="modalClose"
+        class="modal-close">
+        ×
+      </button>
+
+    </div>
+
+    <div
+      id="modalBody"
+      class="modal-body">
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- TOAST -->
+
+<div
+  id="toastContainer"
+  class="toast-container">
+</div>
+
+
+<!-- BIBLIOTHÈQUES PDF -->
+
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+</script>
+
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.2/jspdf.plugin.autotable.min.js">
+</script>
+
+
+<!-- APPLICATION -->
+
+<script type="module" src="cloud.js"></script>
+
+</body>
+</html>
