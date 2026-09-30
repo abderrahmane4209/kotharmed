@@ -4540,24 +4540,48 @@
   }
 
   function setupLogo() {
-    $('logoInput')?.addEventListener('change', e => {
+    $('logoInput')?.addEventListener('change', async e => {
       if (!requireDirector('modifier le logo')) return;
 
       const file = e.target.files?.[0];
       if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast('Choisissez une image pour le logo', 'error');
+        return;
+      }
 
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        db.settings.logo = reader.result;
+      const url = URL.createObjectURL(file);
+      try {
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(1, 512 / Math.max(image.naturalWidth, image.naturalHeight));
+        let prepared = '';
+        for (const scale of [1, 0.75, 0.5, 0.375]) {
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio * scale));
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL('image/webp', 0.8);
+          if (new TextEncoder().encode(compressed).length > 500000) continue;
+          prepared = compressed;
+          break;
+        }
+        if (!prepared) {
+          throw new Error('Logo trop volumineux après compression');
+        }
+        db.settings.logo = prepared;
         save();
         apply();
-
         audit('Modification logo');
         toast('Logo enregistré');
-      };
-
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error(error);
+        toast('Impossible de préparer ce logo. Choisissez une image plus petite.', 'error');
+      } finally {
+        URL.revokeObjectURL(url);
+        e.target.value = '';
+      }
     });
   }
 
